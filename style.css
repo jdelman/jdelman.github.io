@@ -1,0 +1,82 @@
+@import url('https://fonts.googleapis.com/css?family=Proza+Libre:400,700|Cutive+Mono');
+
+body {
+  font-family: 'Cutive Mono', monospace;
+  font-size: 1.1em;
+  padding-bottom: 3em;
+}
+
+::selection {
+  background: yellow;
+}
+
+h1, h2, h3, h4, h5, h6 { font-weight: normal; }
+h2 { font-family: 'Proza Libre'; }
+a { text-decoration: none; color: blue; transition: 100ms outline ease-in-out; }
+a:hover { background: blue; color: white; outline: 5px solid blue;}
+
+button {
+  font-family: 'Proza Libre';
+  font-weight: 700;
+  font-size: 1em;
+  border: 3px solid blue;
+  color: blue;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+}
+
+button:focus {
+  outline: none;
+}
+
+button:hover {
+  border-color: yellow;
+}
+
+code, pre {
+  font-family: 'Cutive Mono', 'Courier New';
+}
+
+.container-small {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.glass {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  background: rgba(0,0,0,0.12);
+  padding: 1em;
+  box-shadow: 0 0 15px 0 rgba(37, 37, 37, 0.43);
+}
+
+.glass > .section:not(:first-child) {
+  margin-top: 1em;
+}
+
+.project {
+  margin-top: 3em;
+}
+
+.project-date {
+  font-family: 'Proza Libre';
+  margin-top: 1em;
+}
+
+.project-title {
+  font-family: 'Proza Libre', sans-serif;
+  font-size: 1.3em;
+  font-weight: 400;
+  margin-bottom: .3em;
+}
+
+.revealable {
+  opacity: 0;
+  transition: 200ms opacity ease-in-out;
+}
+
+.revealable:hover {
+  opacity: 1;
+}

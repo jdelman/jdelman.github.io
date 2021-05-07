@@ -1,0 +1,151 @@
+<body>
+
+  <head>
+    <style>
+      body { margin: 0; }
+    </style>
+    <link href="/style.css" rel="stylesheet">
+  </head>
+
+  <div id="clickme" style="color:white;position:absolute;font-size:10em;width:100%;text-align:justify">c l i c k m e p l e a s e</div>
+  <canvas id="canvas" width="10" height="10"></canvas>
+
+  <script>
+    const ctx = document.getElementById('canvas').getContext('2d');
+
+    function resizeCanvas() {
+      const canvas = document.getElementById('canvas');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    function hexToRgb(hex) {
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+      } : null;
+    }
+
+    const randomColor = () => ({
+      r: Math.round(Math.random() * 255),
+      g: Math.round(Math.random() * 255),
+      b: Math.round(Math.random() * 255)
+    });
+
+    const modes = [
+      [
+        drawGradient,
+        randomColor,
+        randomColor,
+        0,
+        0,
+        () => canvas.width,
+        () => canvas.height
+      ],
+      [
+        drawGradient,
+        randomColor,
+        randomColor,
+        () => Math.round(Math.random() * canvas.width),
+        () => Math.round(Math.random() * canvas.height),
+        () => Math.round(Math.random() * canvas.width * .25),
+        () => Math.round(Math.random() * canvas.height * .25)
+      ],
+      [
+        drawGradient,
+        randomColor,
+        randomColor,
+        () => Math.round(Math.random() * canvas.width),
+        () => Math.round(Math.random() * canvas.height),
+        50,
+        50
+      ],
+      [
+        copyImage,
+        () => Math.round(Math.random() * canvas.width),
+        () => Math.round(Math.random() * canvas.height),
+        () => Math.round(Math.random() * canvas.width),
+        () => Math.round(Math.random() * canvas.height),
+        50,
+        50
+      ]
+    ];
+
+    function addNoise(context) {
+      const pixel = context.createImageData(1, 1);
+      const d = pixel.data;
+      for (let x = 0; x < canvas.width; x++) {
+        for (let y = 0; y < canvas.height; y++) {
+          const G = Math.round(Math.random() * 64) + 128;
+          d[0] = G;
+          d[1] = G;
+          d[2] = G;
+          // d[3] = 0.3;
+          context.putImageData(pixel, x, y);
+        }
+      }
+    }
+
+    function copyImage(context, fromX, fromY, toX, toY, width, height) {
+      const iD = context.getImageData(fromX, fromY, width, height);
+      context.putImageData(iD, toX, toY);
+    }
+
+    function drawGradient(context, sRGB, eRGB, x, y, width, height) {
+      // const [sRGB, eRGB] = [hexToRgb(start), hexToRgb(end)];
+
+      const diffR = (eRGB.r - sRGB.r) / width;
+      const diffG = (eRGB.g - sRGB.g) / width;
+      const diffB = (eRGB.b - sRGB.b) / width;
+
+      let { r, g, b } = sRGB;
+
+      for (let n = x; n < x + width; n++) {
+        const colorStr = `rgba(${ Math.round(r) },${ Math.round(g) },${ Math.round(b) }, 1)`;
+        context.strokeStyle = colorStr;
+
+        context.beginPath();
+        context.moveTo(n, y);
+        context.lineTo(n, y + height);
+        context.stroke();
+
+        r += diffR;
+        g += diffG;
+        b += diffB;
+      }
+    }
+
+    function animate() {
+      const func = modes[window.mode][0];
+      func(ctx, ...makeMode(modes[window.mode].slice(1)));
+      window.requestAnimationFrame(animate);
+      // setTimeout(window.requestAnimationFrame.bind(null, animate), 50);
+    }
+
+    const makeMode = mode => mode.map(e => typeof e === 'function' ? e() : e);
+
+    const cycleMode = () => {
+      window.mode = (window.mode + 1) % modes.length;
+    };
+
+    window.addEventListener('click', cycleMode);
+
+    window.addEventListener('resize', resizeCanvas);
+
+    document.getElementById('clickme').addEventListener('click', function() {
+      this.style.display = 'none';
+    });
+
+    (function() {
+
+      resizeCanvas();
+
+      window.mode = 0;
+
+      animate();
+
+    })();
+  </script>
+</body>

@@ -1,0 +1,173 @@
+<body>
+
+  <head>
+    <style>
+      body { margin: 0; }
+    </style>
+    <link href="/style.css" rel="stylesheet">
+  </head>
+
+  <canvas id="canvas" width="10" height="10"></canvas>
+
+  <div class="glass" id="controls">
+    <div class="section">
+      <span>gen <em><span id="generations"></span></em></span>
+      <button id="stepbutton">step</button>
+      <label><input type="checkbox" id="runcheck">run</label>
+    </div>
+    <div class="section">
+      <label>
+        <input type="range" id="gridwidth" min="2" max="9" value="7">
+        width <em><span id="width"></span></em>
+      </label>
+    </div>
+    <div class="section">
+      <button id="clearbutton">clear</button>
+    </div>
+    <div class="section">
+      <span id="warning"></span>
+    </div>
+  </div>
+
+  <script src="gpu.js"></script>
+  <script src="gol.min.js"></script>
+  <script src="cells.js"></script>
+  
+  <script>
+    function resizeCanvas() {
+      const canvas = document.getElementById('canvas');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      renderCanvas1D(canvas, window.grid, window.gridWidth, window.gridHeight);
+    }
+
+    function updateUI() {
+      document.getElementById('generations').innerHTML = window.gen;
+      document.getElementById('width').innerHTML = window.gridHeight;
+      document.getElementById('warning').innerHTML = window.warningMsg || '';
+    }
+
+    function setGridFunc() {
+      var gpu = new GPU();
+      if (navigator.userAgent.toLowerCase().includes('chrome')) {
+        window.gridFunc = getNextGridConwayGPU1d(gpu)(window.gridWidth, window.gridHeight);
+      }
+      else {
+        window.gridFunc = getNextGridConway1DWithGPUAlgo(window.gridWidth, window.gridHeight);
+        window.warningMsg = 'gpu.js does not like safari, falling back to cpu algo'
+      }
+    }
+
+    function getNFromXY(x, y) {
+      const cellX = Math.floor(event.x / (this.width / window.gridWidth));
+      const cellY = Math.floor(event.y / (this.height / window.gridHeight));
+      
+      const cellN = rollup(window.gridWidth, window.gridHeight)([cellX, cellY]);
+      
+      return cellN;
+    }
+
+    (function() {
+
+      window.gridWidth = 128;
+      window.gridHeight = 128;
+
+      var initialGrid = [
+        [0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 1, 0, 0, 0],
+        [0, 0, 0, 1, 0, 0, 0],
+        [0, 0, 0, 1, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0]
+      ];
+
+      window.grid = generateRandomGrid(window.gridWidth, window.gridHeight, true);
+      // console.log(window.grid);
+      
+      // render initial grid
+      renderCanvas1D(canvas, window.grid, window.gridWidth, window.gridHeight);
+
+      setGridFunc();
+
+      // warm up
+      window.gridFunc(window.grid);
+
+      document.getElementById('runcheck').addEventListener('click', function(event) {
+        window.run = this.checked;
+        document.getElementById('stepbutton').disabled = this.checked;
+        if (window.run) {
+          animate();
+        }
+      });
+
+      document.getElementById('stepbutton').addEventListener('click', function(event) {
+        animate();
+      });
+
+      document.getElementById('gridwidth').addEventListener('change', function(event) {
+        const side = Math.pow(2, this.value);
+        window.gridHeight = side;
+        window.gridWidth = side;
+        window.grid = generateRandomGrid(window.gridWidth, window.gridHeight, true);
+
+        setGridFunc();
+        renderCanvas1D(document.getElementById('canvas'), window.grid, window.gridWidth, window.gridHeight);
+        updateUI();
+      });
+
+      document.getElementById('controls').addEventListener('mouseover', function(event) {
+        this.className = 'glass revealable';
+      });
+
+      document.getElementById('canvas').addEventListener('click', function(event) {
+        const cellN = getNFromXY(event.x, event.y);
+        window.grid[cellN] = window.grid[cellN] == 1 ? 0 : 1;
+        renderCanvas1D(this, window.grid, window.gridWidth, window.gridHeight);
+      });
+
+      document.getElementById('canvas').addEventListener('mousedown', function(event) {
+        console.log('mousedown, current click mode =', window.clickMode);
+        window.clicking = true;
+
+        // if the user starts dragging, update all dragged cells with the same mode
+        const cellN = getNFromXY.call(this, event.x, event.y);
+        window.clickMode = Number(!window.grid[cellN]);
+        console.log('clickmode=', window.clickMode);
+        window.grid[cellN] = window.clickMode;
+      });
+
+      document.getElementById('canvas').addEventListener('mousemove', function(event) {
+        if (!window.clicking) return;
+
+        const f = rollup(window.gridWidth, window.gridHeight);
+
+        const cellX = Math.floor(event.x / (this.width / window.gridWidth));
+        const cellY = Math.floor(event.y / (this.height / window.gridHeight));
+        const cellN = f([cellX, cellY]);
+        
+        window.grid[cellN] = window.clickMode;
+        renderCanvas1D(this, window.grid, window.gridWidth, window.gridHeight);
+      });
+
+      document.addEventListener('mouseup', function(event) {
+        window.clicking = false;
+        window.clickMode = null;
+      });
+
+      document.getElementById('clearbutton').addEventListener('click', function(event) {
+        window.grid = Array(window.gridHeight * window.gridWidth).fill(0);
+        window.gen = 0;
+        updateUI();
+        renderCanvas1D(document.getElementById('canvas'), window.grid, window.gridWidth, window.gridHeight);
+      });
+
+      window.addEventListener('resize', resizeCanvas);
+
+      resizeCanvas();
+      updateUI();
+
+    })();
+  </script>
+
+</body>

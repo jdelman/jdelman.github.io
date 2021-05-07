@@ -1,0 +1,150 @@
+<head>
+  <style>
+    .osc {
+      display: inline-block;
+      font-family: monospace;
+      padding: .1em 1em .1em 0em;
+    }
+
+    .done {
+      background: green;
+    }
+  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+</head>
+<body>
+  <h1>thx2</h1>
+  <label for="count">count</label>
+  <input id="count" type="num" value="18">
+  <button onclick="start()">start</button>
+  <div id="values"></div>
+  <script>
+    // create web audio api context
+    let isOn = false;
+    const noteChangeInterval = 100; // milliseconds
+    const totalSoundLength = 10000;
+    const totalSteps = totalSoundLength / noteChangeInterval;
+
+    function makeCallback(count) {
+      let completed = 0;
+      return function() {
+        completed++;
+        if (completed === count) {
+          // final osc
+          const lastOsc = makeOsc(65, 0.05, 'sine');
+          lastOsc.start();
+        }
+      }
+    }
+
+    function start() {
+      const count = parseInt(document.getElementById('count').value);
+      const cb = makeCallback(count);
+      for (let i = 0; i < count; i++) {
+        startOsc(i, cb);
+      }
+    }
+
+    function *pickNext(values) {
+      let index = 0;
+      while (true) {
+        if (index > values.length - 1) index = 0;
+        yield values[index];
+        index += 1;
+      }
+    }
+
+    function pickRandom(values) {
+      const randomIndex = Math.floor(values.length * Math.random());
+      return values[randomIndex];
+    }
+
+    const chordValues = [ 
+      261.63, // C
+      327.5,  // E
+      393.0   // G
+    ];
+
+    function getRandomChordNote() {
+      return pickRandom(chordValues);
+    }
+
+    function getRandomInterval() {
+      return pickRandom([1, 2, 4]);
+    }
+
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    const chordPicker = pickNext(chordValues);
+    const intervalPicker = pickNext([0.25, 0.5, 1, 2, 4]);
+
+    function makeOsc(hz, gain = 0.01, type = 'sawtooth') {
+      const gainNode = audioCtx.createGain();
+      gainNode.gain.value = gain;
+      gainNode.connect(audioCtx.destination);
+
+      const oscillator = audioCtx.createOscillator();
+      oscillator.connect(gainNode);
+      oscillator.type = type;
+
+      oscillator.frequency.setValueAtTime(hz, audioCtx.currentTime);
+
+      return oscillator;
+    }
+
+    function sinValue(t) {
+      const frequencyFactor = 1;
+      const amplitudeFactor = 2;
+      return (totalSoundLength - t) * (Math.sin(frequencyFactor * t) / amplitudeFactor);
+    }
+
+    function startOsc(n, cb) {
+      const endFreq = chordPicker.next().value / intervalPicker.next().value;
+      
+
+
+      const sign = Math.random() > .5;
+      let currFreq = endFreq;
+      if (sign) {
+        currFreq += Math.random() * 100;
+      }
+      else {
+        currFreq -= Math.random() * 100;
+      }
+      const oscillator = makeOsc(currFreq);
+
+      const valElem = document.createElement('div');
+      valElem.id = 'value-' + n;
+      valElem.classList.add('osc');
+      document.getElementById('values').appendChild(valElem);
+
+      const ival = setInterval(() => {
+        if (n === 1) {
+          console.log('currentTime=', audioCtx.currentTime);
+        }
+
+        const diff = Math.abs(currFreq - endFreq);
+        if (diff < 1) {
+          clearInterval(ival);
+          valElem.classList.add('done');
+          cb();
+        }
+
+        const interval = Math.random();
+
+        if (currFreq < endFreq) {
+          currFreq += interval;
+        }
+        else if (currFreq > endFreq) {
+          currFreq -= interval;
+        }
+
+        valElem.innerText = 'osc ' + n + ': ' + currFreq.toFixed(2) + 'hz';
+        oscillator.frequency.setValueAtTime(currFreq, audioCtx.currentTime);
+      }, noteChangeInterval);
+
+      oscillator.start();
+    }
+  </script>
+</body>
