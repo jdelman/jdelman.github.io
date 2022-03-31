@@ -1,0 +1,31 @@
+<body>
+  <div>count is total number of calls to next() using
+    <a href="https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame" target="_new">
+      <span style="font-family: monospace">requestAnimationFrame</span>
+    </a>
+  </div>
+  <div>count: <span id="count"></span></div>
+  <div>avg fps: <span id="fps"></span></div>
+
+  <script>
+    let count = 0;
+
+    function next() {
+      count++;
+      document.getElementById('count').innerHTML = String(count);
+      requestAnimationFrame(next);
+    }
+
+    function start() {
+      // every second, calculate the average frames/sec
+      const t0 = Date.now();
+      next();
+      setInterval(() => {
+        const avg = (count / (Date.now() - t0)) * 1000;
+        document.getElementById('fps').innerHTML = String(avg);
+      }, 1000);
+    }
+
+    start();
+  </script>
+</body>
