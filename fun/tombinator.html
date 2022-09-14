@@ -1,0 +1,231 @@
+<head>
+  <style>
+    body {
+      background: black;
+      color: white;
+      font-family: monospace;
+      margin: 0;
+    }
+
+    main {
+      margin: .4em;
+    }
+
+    #loader {
+      width: 100%;
+      height: 100%;
+      z-index: 10;
+      position: absolute;
+      background: rgba(0,0,0,0.8);
+      color: white;
+    }
+
+    .cc {
+      position: relative;
+      margin: auto;
+      text-align: center;
+      padding-top: 25%;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+  <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js" type="application/javascript"></script>
+</head>
+
+
+<body>
+  <div id="loader" class="hidden">
+    <div class="cc">
+      loading data from the B L O C K C H A I N...<br />
+      note: for now you must have a browser-based wallet (metamask) running on mainnet for this to work
+    </div>
+  </div>
+  <main>
+    <div id="selector">
+      <h2>tombinator</h2>
+      <pre>
+        notes:
+         - pick two tombs, a blend mode, hit "go", and admire your hard work
+         - try a different blend mode if the results were not what you expected
+         - tombs that have not yet been deployed will not work, even though they're in the list; sorry
+         - all images were drawn by david rudnick. thank you david rudnick.
+      </pre>
+      <span>
+        tomb 1: <select id="tomb1"></select>
+      </span>
+      <span>
+        tomb 2: <select id="tomb2"></select>
+      </span>
+      <span>
+        blend mode:
+        <select id="blend">
+          <option value="darken">darken</option>
+          <option value="lighten">lighten</option>
+          <option value="screen">screen</option>
+          <option value="color-dodge">dodge</option>
+          <option value="color-burn">burn</option>
+        </select>
+      </span>
+      <span>
+        <button type="button" id="gobutton">go</button>
+      </span>
+    </div>
+    
+    <canvas id="cvs" width="1000" height="1000"></canvas>
+  </main>
+
+
+<script>
+
+  function setDPI(canvas) {
+    // Set up CSS size.
+    const ratio = window.devicePixelRatio;
+
+    canvas.style.width = canvas.style.width || canvas.width + 'px';
+    canvas.style.height = canvas.style.height || canvas.height + 'px';
+
+    canvas.width = Math.ceil(canvas.width * ratio);
+    canvas.height = Math.ceil(canvas.height * ratio);
+    var ctx = canvas.getContext('2d');
+    ctx.scale(ratio, ratio);
+  }
+
+  function getImage(url) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.src = url;
+      img.addEventListener('load', () => {
+        resolve(img);
+      });
+    });
+  }
+
+  const canvas = document.getElementById('cvs');
+  setDPI(canvas);
+
+  const ctx = canvas.getContext('2d');
+
+  const tombSeriesContract = '0x185e8a578bf6896e3988e7c38a6a23889ca2af9f';
+  const tombIndexContractAbi = [{ "inputs": [{ "internalType": "string", "name": "_imageURI", "type": "string" }, { "internalType": "address", "name": "artistAddress", "type": "address" }], "stateMutability": "nonpayable", "type": "constructor" }, { "inputs": [], "name": "NumberTooBig", "type": "error" }, { "anonymous": false, "inputs": [{ "indexed": true, "internalType": "address", "name": "owner", "type": "address" }, { "indexed": true, "internalType": "address", "name": "spender", "type": "address" }, { "indexed": true, "internalType": "uint256", "name": "id", "type": "uint256" }], "name": "Approval", "type": "event" }, { "anonymous": false, "inputs": [{ "indexed": true, "internalType": "address", "name": "owner", "type": "address" }, { "indexed": true, "internalType": "address", "name": "operator", "type": "address" }, { "indexed": false, "internalType": "bool", "name": "approved", "type": "bool" }], "name": "ApprovalForAll", "type": "event" }, { "anonymous": false, "inputs": [{ "indexed": true, "internalType": "address", "name": "previousOwner", "type": "address" }, { "indexed": true, "internalType": "address", "name": "newOwner", "type": "address" }], "name": "OwnershipTransferred", "type": "event" }, { "anonymous": false, "inputs": [{ "indexed": false, "internalType": "uint256", "name": "id", "type": "uint256" }], "name": "TombUpdated", "type": "event" }, { "anonymous": false, "inputs": [{ "indexed": true, "internalType": "address", "name": "from", "type": "address" }, { "indexed": true, "internalType": "address", "name": "to", "type": "address" }, { "indexed": true, "internalType": "uint256", "name": "id", "type": "uint256" }], "name": "Transfer", "type": "event" }, { "inputs": [{ "internalType": "address", "name": "spender", "type": "address" }, { "internalType": "uint256", "name": "id", "type": "uint256" }], "name": "approve", "outputs": [], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [{ "internalType": "address", "name": "", "type": "address" }], "name": "balanceOf", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "freezeContract", "outputs": [], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "name": "getApproved", "outputs": [{ "internalType": "address", "name": "", "type": "address" }], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "imageURI", "outputs": [{ "internalType": "string", "name": "", "type": "string" }], "stateMutability": "view", "type": "function" }, { "inputs": [{ "internalType": "address", "name": "", "type": "address" }, { "internalType": "address", "name": "", "type": "address" }], "name": "isApprovedForAll", "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "isFrozen", "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }], "stateMutability": "view", "type": "function" }, { "inputs": [{ "internalType": "uint8", "name": "id", "type": "uint8" }], "name": "jsonForTomb", "outputs": [{ "internalType": "bytes", "name": "", "type": "bytes" }], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "name", "outputs": [{ "internalType": "string", "name": "", "type": "string" }], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "owner", "outputs": [{ "internalType": "address", "name": "", "type": "address" }], "stateMutability": "view", "type": "function" }, { "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "name": "ownerOf", "outputs": [{ "internalType": "address", "name": "", "type": "address" }], "stateMutability": "view", "type": "function" }, { "inputs": [{ "internalType": "uint8", "name": "id", "type": "uint8" }], "name": "ownerOfTomb", "outputs": [{ "internalType": "address", "name": "", "type": "address" }], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "renounceOwnership", "outputs": [], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [{ "internalType": "address", "name": "from", "type": "address" }, { "internalType": "address", "name": "to", "type": "address" }, { "internalType": "uint256", "name": "id", "type": "uint256" }], "name": "safeTransferFrom", "outputs": [], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [{ "internalType": "address", "name": "from", "type": "address" }, { "internalType": "address", "name": "to", "type": "address" }, { "internalType": "uint256", "name": "id", "type": "uint256" }, { "internalType": "bytes", "name": "data", "type": "bytes" }], "name": "safeTransferFrom", "outputs": [], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [{ "internalType": "uint256[]", "name": "ids", "type": "uint256[]" }, { "internalType": "string[]", "name": "names", "type": "string[]" }, { "components": [{ "internalType": "bool", "name": "_initialized", "type": "bool" }, { "internalType": "uint32", "name": "weight", "type": "uint32" }, { "internalType": "uint8", "name": "numberInHouse", "type": "uint8" }, { "internalType": "uint256", "name": "house", "type": "uint256" }, { "components": [{ "internalType": "uint16", "name": "chainID", "type": "uint16" }, { "internalType": "bool", "name": "deployed", "type": "bool" }, { "internalType": "address", "name": "hostContract", "type": "address" }, { "internalType": "uint256", "name": "tokenID", "type": "uint256" }], "internalType": "struct TombIndex.deployment", "name": "deployment", "type": "tuple" }], "internalType": "struct TombIndex.Tomb[]", "name": "tombs", "type": "tuple[]" }], "name": "saveTombs", "outputs": [], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [{ "internalType": "address", "name": "operator", "type": "address" }, { "internalType": "bool", "name": "approved", "type": "bool" }], "name": "setApprovalForAll", "outputs": [], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [{ "internalType": "string", "name": "_url", "type": "string" }], "name": "setImageURI", "outputs": [], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [{ "internalType": "bytes4", "name": "interfaceId", "type": "bytes4" }], "name": "supportsInterface", "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }], "stateMutability": "pure", "type": "function" }, { "inputs": [], "name": "symbol", "outputs": [{ "internalType": "string", "name": "", "type": "string" }], "stateMutability": "view", "type": "function" }, { "inputs": [{ "internalType": "uint256", "name": "id", "type": "uint256" }], "name": "tokenURI", "outputs": [{ "internalType": "string", "name": "", "type": "string" }], "stateMutability": "view", "type": "function" }, { "inputs": [{ "internalType": "uint8", "name": "", "type": "uint8" }], "name": "tombByID", "outputs": [{ "internalType": "bool", "name": "_initialized", "type": "bool" }, { "internalType": "uint32", "name": "weight", "type": "uint32" }, { "internalType": "uint8", "name": "numberInHouse", "type": "uint8" }, { "internalType": "uint256", "name": "house", "type": "uint256" }, { "components": [{ "internalType": "uint16", "name": "chainID", "type": "uint16" }, { "internalType": "bool", "name": "deployed", "type": "bool" }, { "internalType": "address", "name": "hostContract", "type": "address" }, { "internalType": "uint256", "name": "tokenID", "type": "uint256" }], "internalType": "struct TombIndex.deployment", "name": "deployment", "type": "tuple" }], "stateMutability": "view", "type": "function" }, { "inputs": [{ "internalType": "uint8", "name": "", "type": "uint8" }], "name": "tombNameByID", "outputs": [{ "internalType": "string", "name": "", "type": "string" }], "stateMutability": "view", "type": "function" }, { "inputs": [{ "internalType": "address", "name": "from", "type": "address" }, { "internalType": "address", "name": "to", "type": "address" }, { "internalType": "uint256", "name": "id", "type": "uint256" }], "name": "transferFrom", "outputs": [], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [{ "internalType": "address", "name": "newOwner", "type": "address" }], "name": "transferOwnership", "outputs": [], "stateMutability": "nonpayable", "type": "function" }];
+  const tombCount = 177;
+
+  const provider = new ethers.providers.Web3Provider(window.ethereum);
+  // const provider = ethers.getDefaultProvider();
+
+  // collect tomb data
+  const contract = new ethers.Contract(tombSeriesContract, tombIndexContractAbi, provider);
+
+  function u_atob(ascii) {
+    return Uint8Array.from(atob(ascii), c => c.charCodeAt(0));
+  }
+
+  function getTombJSONFromBase64(b64) {
+    // beginning is a protocol, actual data starts at 29
+    const arr = u_atob(b64.substring(29));
+    const str = new TextDecoder().decode(arr);
+    return JSON.parse(str);
+  }
+
+  function fillOptions(tombs) {
+    const elems = [
+      document.getElementById('tomb1'),
+      document.getElementById('tomb2'),
+    ];
+
+    for (const elem of elems) {
+      for (const tomb of tombs) {
+        const option = document.createElement('option');
+        option.value = tomb.tombRomanNumeral;
+        option.innerHTML = tomb.tombName;
+        elem.appendChild(option);
+      }
+    }
+
+    elems[0].value = 'I';
+    elems[1].value = 'II';
+  }
+
+  function onGoClicked(event) {
+    event.preventDefault();
+
+    const tomb1 = document.getElementById('tomb1').value;
+    const tomb2 = document.getElementById('tomb2').value;
+    const blendMode = document.getElementById('blend').value;
+
+    buildHybridTomb(tomb1, tomb2, blendMode);
+  }
+
+  async function getTombs() {
+    const tombs = [];
+    for (let idx = 1; idx <= tombCount; idx++) {
+      const tombData = await Promise.all([
+        contract.tombByID(idx),
+        getTombJSONFromBase64(await contract.tokenURI(idx)),
+      ]);
+      tombs.push(tombData);
+    }
+    return tombs;
+  }
+
+  async function getValidTombs() {
+    const tombs = await getTombs();
+    const validTombs = [];
+    for (const tomb of tombs) {
+      const isDeployed = tomb[0].deployment[1];
+
+      const tombParts = tomb[1].name.split(' ');
+
+      const tombRomanNumeral = tombParts[1];
+      const tombName = tombParts.slice(3).join(' ');
+      validTombs.push({
+        tombName,
+        tombRomanNumeral,
+      });
+    }
+    return validTombs;
+  }
+
+  async function getValidTombsCached() {
+    let data;
+    const cachedData = window.localStorage.getItem('tomb-data');
+    if (cachedData) {
+      console.log('loading data from cache.');
+      data = JSON.parse(cachedData);
+    } else {
+      console.log('collecting tomb data from the blockchain');
+      data = await getValidTombs();
+      window.localStorage.setItem('tomb-data', JSON.stringify(data));
+    }
+    return data;
+  }
+
+  async function buildHybridTomb(tomb1, tomb2, blendMode) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    console.log('downloading tombs...');
+    const imgs = await Promise.all([
+      `https://tomb-srs.s3-us-west-1.amazonaws.com/2k/${tomb1}.webp`,
+      `https://tomb-srs.s3-us-west-1.amazonaws.com/2k/${tomb2}.webp`,
+    ].map(url => getImage(url)));
+
+    // lay down img 1
+    ctx.drawImage(imgs[0], 0, 0, 1000, 1000);
+    ctx.globalCompositeOperation = blendMode;
+
+    for (const img of imgs.slice(1)) {
+      ctx.drawImage(img, 0, 0, 1000, 1000);
+    }
+  }
+
+  (async function() {
+    document.getElementById('loader').classList.remove('hidden');
+    const tombs = await getValidTombsCached();
+    fillOptions(tombs);
+    document.getElementById('gobutton').addEventListener('click', onGoClicked);
+    document.getElementById('loader').classList.add('hidden');
+  })();
+</script>
+
+</body>
