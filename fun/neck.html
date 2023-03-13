@@ -1,0 +1,135 @@
+<head>
+  <style>
+    body {
+      font-family: 'Courier New', Courier, monospace;
+    }
+
+    .body-wrapper {
+      margin: 0px auto;
+      width: 500px;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    .timer {
+      text-align: center;
+      font-size: 5em;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: space-evenly;
+    }
+
+    .controls button {
+      font-size: 1.2em;
+    }
+
+    .list li {
+      margin-top: 1em;
+    }
+
+    .list li.current {
+      background-color: yellow;
+    }
+
+    .glow {
+      animation-name: yellow-glow;
+      animation-duration: 2s;
+      animation-timing-function: ease-in-out;
+      animation-iteration-count: infinite;
+    }
+
+    @keyframes yellow-glow {
+      0% { background-color: yellow; }
+      50% { background-color: white; }
+      100% { background-color: yellow; }
+    }
+  </style>
+</head>
+<body>
+  <div class="body-wrapper">
+    <h1>neck exercises</h1>
+    <div class="list-wrapper">
+      <ol class="list" id="list">
+        <li>Left to right - turn until you feel resistance, hold, then other direction</li>
+        <li>Up and down - two hands on chest. Keep neck high, tuck chin</li>
+        <li>Tilt ears up - make neck longer, feel stretch on side</li>
+        <li>Cell phone drill - make fat face, then out all the way</li>
+        <li>Janet Jackson - slide head left and right, keeping eyes level</li>
+        <li>Half circle roll through front</li>
+      </ul>
+    </div>
+    <div class="timer" id="timer">
+      --
+    </div>
+    <div class="controls">
+      <button id="start-stop-button">start</button>
+    </div>
+  </div>
+
+  <script>
+    let timerInterval;
+    let isTimerRunning = false;
+    let currentExercise = 0;
+    
+    // 30 seconds for each exercise with 5 seconds between them
+    const interval = 5;
+    const pause = 3;
+    
+    const timerElem = document.getElementById('timer');
+    const button = document.getElementById('start-stop-button');
+    const list = document.getElementById('list');
+
+    button.addEventListener('click', () => {
+      if (!isTimerRunning) {
+        isTimerRunning = true;
+        runSequence();
+      }
+    });
+
+    async function runSequence() {
+      for (let i = 0; i < list.children.length; i++) {
+        const currChild = list.children[i];
+        if (i - 1 > -1) {
+          // remove highlight class from previous element
+          const lastChild = list.children[i - 1];
+          lastChild.classList.remove('current');
+          currChild.classList.remove('glow');
+        }
+        currChild.classList.add('current');
+        await runTimer(interval);
+        if (i < list.children.length - 1) {
+          const nextChild = list.children[i + 1];
+          nextChild.classList.add('glow');
+          await runTimer(pause);
+        }
+      }
+      list.children[list.children.length - 1].classList.remove('current');
+    }
+
+    function runTimer(seconds) {
+      if (!isTimerRunning) {
+        return;
+      }
+
+      return new Promise((resolve) => {
+        const numberWithSingleDecimal = seconds.toFixed(1);
+        timerElem.innerHTML = `${numberWithSingleDecimal}s`;
+        const start = Date.now();
+        timerInterval = setInterval(() => {
+          const elapsed = seconds - ((Date.now() - start) / 1000);
+          const currentNumber = elapsed.toFixed(1);
+          timerElem.innerHTML = `${currentNumber}s`;
+
+          if (elapsed < 0) {
+            clearInterval(timerInterval);
+            resolve();
+          }
+        }, 100);
+      });
+    }
+  </script>
+</body>
