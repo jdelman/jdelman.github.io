@@ -1,0 +1,157 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    padding: 20px;
+    background-color: #f0f0f0;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.upload-section {
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.upload-label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+.player-section {
+    text-align: center;
+}
+
+.info-display {
+    margin: 20px 0;
+    padding: 15px;
+    background-color: #f8f8f8;
+    border-radius: 5px;
+}
+
+#podcastName {
+    font-size: 1.2em;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+#episodeTitle {
+    color: #666;
+}
+
+.controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 20px 0;
+}
+
+button {
+    padding: 10px 20px;
+    font-size: 1em;
+    cursor: pointer;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+.audio-container {
+    margin: 20px 0;
+    padding: 10px;
+}
+
+audio {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    display: block;
+}
+
+/* Styling for the audio player controls */
+audio::-webkit-media-controls-panel {
+    background-color: #f8f8f8;
+}
+
+audio::-webkit-media-controls-play-button {
+    background-color: #4CAF50;
+    border-radius: 50%;
+}
+
+audio::-webkit-media-controls-play-button:hover {
+    background-color: #45a049;
+}
+
+.now-playing {
+    margin: 20px 0;
+    padding: 15px;
+    background-color: #f8f8f8;
+    border-radius: 5px;
+}
+
+.now-playing h2 {
+    margin-bottom: 10px;
+    font-size: 1.2em;
+    color: #333;
+}
+
+#currentPodcastName {
+    font-size: 1.2em;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+#currentEpisodeTitle {
+    color: #666;
+}
+
+.loading-status {
+    margin-top: 20px;
+    padding: 10px;
+    border-top: 1px solid #eee;
+}
+
+.loading-status h3 {
+    font-size: 1em;
+    color: #666;
+    margin-bottom: 8px;
+}
+
+#loadingPodcastName {
+    font-weight: bold;
+    margin-bottom: 3px;
+}
+
+#loadingStatus {
+    color: #888;
+    font-size: 0.9em;
+} 

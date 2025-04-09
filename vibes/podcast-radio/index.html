@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Podcast Radio</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Podcast Radio</h1>
+        
+        <div class="upload-section">
+            <label for="opmlFile" class="upload-label">Upload your OPML file:</label>
+            <input type="file" id="opmlFile" accept=".opml,text/xml">
+        </div>
+
+        <div class="player-section">
+            <div class="now-playing">
+                <h2>Now Playing</h2>
+                <div id="currentPodcastName">No podcast selected</div>
+                <div id="currentEpisodeTitle">Upload OPML file to start</div>
+            </div>
+
+            <div class="controls">
+                <button id="playPauseBtn">Play</button>
+                <button id="nextBtn">Next</button>
+            </div>
+
+            <audio id="audioPlayer" controls></audio>
+
+            <div class="loading-status">
+                <h3>Loading Next</h3>
+                <div id="loadingPodcastName"></div>
+                <div id="loadingStatus"></div>
+            </div>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html> 
