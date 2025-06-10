@@ -56,6 +56,14 @@
         button:hover {
             opacity: 0.9;
         }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        input:disabled {
+            background-color: #f5f5f5;
+            cursor: not-allowed;
+        }
         #timer {
             font-size: 3rem;
             margin: 1rem 0;
@@ -64,6 +72,21 @@
         #intervals {
             margin-top: 1rem;
             font-size: 1.2rem;
+        }
+        .checkbox-group {
+            margin: 1rem 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        .checkbox-group label {
+            cursor: pointer;
         }
     </style>
 </head>
@@ -87,6 +110,10 @@
             <button id="pauseBtn">Pause</button>
             <button id="stopBtn">Stop</button>
         </div>
+        <div class="checkbox-group">
+            <input type="checkbox" id="loopCheckbox">
+            <label for="loopCheckbox">Loop Forever</label>
+        </div>
     </div>
 
     <script>
@@ -100,6 +127,7 @@
                 this.startBtn = document.getElementById('startBtn');
                 this.pauseBtn = document.getElementById('pauseBtn');
                 this.stopBtn = document.getElementById('stopBtn');
+                this.loopCheckbox = document.getElementById('loopCheckbox');
 
                 this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 this.timeLeft = 0;
@@ -108,6 +136,7 @@
                 this.currentInterval = 0;
                 this.timerId = null;
                 this.isPaused = false;
+                this.isLooping = false;
 
                 this.setupEventListeners();
             }
@@ -116,6 +145,19 @@
                 this.startBtn.addEventListener('click', () => this.start());
                 this.pauseBtn.addEventListener('click', () => this.pause());
                 this.stopBtn.addEventListener('click', () => this.stop());
+                this.loopCheckbox.addEventListener('change', () => this.toggleLoop());
+            }
+
+            toggleLoop() {
+                this.isLooping = this.loopCheckbox.checked;
+                this.intervalCountInput.disabled = this.isLooping;
+            }
+
+            setFieldsEnabled(enabled) {
+                this.minutesInput.disabled = !enabled;
+                this.secondsInput.disabled = !enabled;
+                this.intervalCountInput.disabled = !enabled || this.isLooping;
+                this.loopCheckbox.disabled = !enabled;
             }
 
             playBeep(frequency = 800, duration = 0.1) {
@@ -153,12 +195,13 @@
                         parseInt(this.minutesInput.value) * 60 + 
                         parseInt(this.secondsInput.value);
                     this.timeLeft = this.totalTime;
-                    this.intervalCount = parseInt(this.intervalCountInput.value);
+                    this.intervalCount = this.isLooping ? Infinity : parseInt(this.intervalCountInput.value);
                     this.currentInterval = 0;
                 }
                 
                 this.isPaused = false;
                 this.timerId = setInterval(() => this.tick(), 1000);
+                this.setFieldsEnabled(false);
             }
 
             pause() {
@@ -166,6 +209,7 @@
                     clearInterval(this.timerId);
                     this.timerId = null;
                     this.isPaused = true;
+                    this.setFieldsEnabled(true);
                 }
             }
 
@@ -174,6 +218,7 @@
                 this.timeLeft = 0;
                 this.currentInterval = 0;
                 this.updateDisplay();
+                this.setFieldsEnabled(true);
             }
 
             tick() {
@@ -187,7 +232,12 @@
                         this.timeLeft = this.totalTime;
                     } else {
                         this.playBeep(400, 1); // Completion beep
-                        this.stop();
+                        if (!this.isLooping) {
+                            this.stop();
+                        } else {
+                            this.currentInterval = 0;
+                            this.timeLeft = this.totalTime;
+                        }
                     }
                 }
             }
