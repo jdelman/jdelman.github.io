@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>US Map - Stadia Toner</title>
+    
+    <!-- MapLibre GL JS -->
+    <script src='js/maplibre-gl.js'></script>
+    <link href='css/maplibre-gl.css' rel='stylesheet' />
+    
+    <style>
+        @font-face {
+            font-family: 'ProggySmall';
+            src: url('fonts/ProggySmall.ttf') format('truetype');
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'ProggySmall', monospace;
+        }
+        #map {
+            width: 100vw;
+            height: 100vh;
+        }
+        /* Override MapLibre's default font */
+        .maplibregl-canvas-container {
+            font-family: 'ProggySmall', monospace !important;
+        }
+        /* Hide zoom controls */
+        .maplibregl-ctrl-zoom-in,
+        .maplibregl-ctrl-zoom-out,
+        .maplibregl-ctrl-group {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+
+    <script>
+        // Initialize the map
+        const map = new maplibregl.Map({
+            container: 'map',
+            style: 'map/toner-gray.json',
+            center: [-73.9712, 40.7831], // Center on Manhattan
+            zoom: 12
+        });
+
+        // Add error handling
+        map.on('error', function(e) {
+            console.error('Map error:', e);
+        });
+
+        // Log when tiles are loaded successfully
+        map.on('load', function() {
+            console.log('Map loaded successfully');
+        });
+    </script>
+</body>
+</html> 
