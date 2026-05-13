@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Beaches Turks &amp; Caicos Restaurants</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <div class="hero__content">
+        <p class="eyebrow">Beaches Turks &amp; Caicos</p>
+        <h1>Restaurant Directory &amp; Menu Search</h1>
+        <p class="subtitle">
+          Browse every restaurant, see menus and hours, and search menu items to
+          find the location, attire, and hours.
+        </p>
+      </div>
+    </header>
+
+    <main class="content">
+      <section class="panel">
+        <h2>Search menu items</h2>
+        <p class="helper">
+          Type a menu item name to see which restaurant serves it, plus the
+          hours, location, and attire.
+        </p>
+        <label class="search" for="menuSearch">
+          <span class="search__label">Menu item</span>
+          <input id="menuSearch" type="search" placeholder="Try: Chicken Wings, Tiramisu, Mahi Mahi..." />
+        </label>
+        <div id="searchResults" class="results">
+          <p class="muted">Start typing to search the menu index.</p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel__header">
+          <h2>All restaurants</h2>
+          <p id="restaurantCount" class="muted"></p>
+        </div>
+        <div id="restaurantList" class="restaurant-grid"></div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>
+        Data sourced from Beaches Turks &amp; Caicos restaurant listings and menus.
+      </p>
+    </footer>
+
+    <script src="app.js"></script>
+  </body>
+</html>
