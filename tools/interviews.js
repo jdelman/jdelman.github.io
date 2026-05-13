@@ -205,12 +205,7 @@ function titleFrom(markdown, file, metadata) {
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
-function renderPage(file) {
-  const raw = fs.readFileSync(file, "utf8");
-  const [metadata, markdown] = readFrontMatter(raw.replace(/\r\n/g, "\n"));
-  const title = titleFrom(markdown, file, metadata);
-  const body = renderMarkdown(markdown);
-
+function renderDocument(title, body) {
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -368,6 +363,41 @@ ${body.split("\n").map((line) => `      ${line}`).join("\n")}
 `;
 }
 
+function pageInfo(file) {
+  const raw = fs.readFileSync(file, "utf8");
+  const [metadata, markdown] = readFrontMatter(raw.replace(/\r\n/g, "\n"));
+
+  return {
+    markdown,
+    metadata,
+    title: titleFrom(markdown, file, metadata),
+  };
+}
+
+function renderPage(file) {
+  const info = pageInfo(file);
+  return renderDocument(info.title, renderMarkdown(info.markdown));
+}
+
+function renderIndexPage(directory, files) {
+  const links = files
+    .sort((a, b) => pageInfo(a).title.localeCompare(pageInfo(b).title))
+    .map((file) => {
+      const info = pageInfo(file);
+      const href = path.relative(directory, file).replace(/\.md$/i, ".html");
+
+      return `<div class="section">
+  <div class="left"></div>
+  <div class="right">
+    <p><a href="${escapeAttr(href)}">${escapeHtml(info.title)}</a></p>
+  </div>
+</div>`;
+    })
+    .join("\n\n");
+
+  return renderDocument("Interviews", `<h1>Interviews</h1>\n\n${links}`);
+}
+
 function isMarkdown(file) {
   return file.toLowerCase().endsWith(".md");
 }
@@ -402,10 +432,21 @@ function markdownFiles(target) {
 
 function build(target) {
   const files = markdownFiles(target);
+  const absoluteTarget = path.resolve(root, target || ".");
+  const shouldWriteIndex = Boolean(target)
+    && fs.existsSync(absoluteTarget)
+    && fs.statSync(absoluteTarget).isDirectory();
+
   for (const file of files) {
     const output = file.replace(/\.md$/i, ".html");
     fs.writeFileSync(output, renderPage(file));
     console.log(`${path.relative(root, file)} -> ${path.relative(root, output)}`);
+  }
+
+  if (shouldWriteIndex && files.length) {
+    const output = path.join(absoluteTarget, "index.html");
+    fs.writeFileSync(output, renderIndexPage(absoluteTarget, files));
+    console.log(`${path.relative(root, output)}`);
   }
 
   if (!files.length) {
