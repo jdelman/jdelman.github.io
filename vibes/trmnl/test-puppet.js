@@ -16,11 +16,15 @@ const locations = {
 
 async function uploadToBucket(filePath, destination) {
   try {
+    const metadata = {
+      // For HTML files, set no-cache to force browser reload
+      // For PNG files, keep the existing no-cache setting
+      cacheControl: destination.endsWith('.html') ? 'no-cache, no-store, must-revalidate' : 'no-cache',
+    };
+
     await bucket.upload(filePath, {
       destination: destination,
-      metadata: {
-        cacheControl: 'no-cache',
-      },
+      metadata: metadata,
     });
     console.log(`${filePath} uploaded to ${destination}`);
   } catch (error) {
@@ -48,21 +52,40 @@ function getTime() {
   return `${datePart} @ ${timePart}`;
 }
 
-function overlayText(text, input, output) {
-  const svg  = Buffer.from(`
-    <svg width="800" height="480" xmlns="http://www.w3.org/2000/svg">
-      <style>
-        text { font: 14px monospace; fill: white; }
-      </style>
-      <text x="0" y="10" dominant-baseline="top" text-anchor="left">
-        ${text}
-      </text>
-    </svg>
-  `);
-  return sharp(input)
-    .composite([{ input: svg, top: 0, left: 0 }])   // position as needed
-    .png()                                          // keep it PNG; or .toFormat('png')
-    .toFile(output);
+// Floyd–Steinberg dithering function
+function floydSteinbergDither(imageData, width, height) {
+  const data = Uint8ClampedArray.from(imageData);
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const i = y * width + x;
+      const oldPixel = data[i];
+      const newPixel = oldPixel < 128 ? 0 : 255;
+      const error = oldPixel - newPixel;
+      data[i] = newPixel;
+
+      if (x + 1 < width) data[i + 1] += error * 7 / 16;
+      if (x > 0 && y + 1 < height) data[i + width - 1] += error * 3 / 16;
+      if (y + 1 < height) data[i + width] += error * 5 / 16;
+      if (x + 1 < width && y + 1 < height) data[i + width + 1] += error * 1 / 16;
+    }
+  }
+
+  return data;
+}
+
+function generateHTML(imageUrl) {
+  return `<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            body {margin: 0; padding: 0;}
+        </style>
+    </head>
+    <body>
+        <img src="https://storage.googleapis.com/trmnl-flight-map/${imageUrl}" />
+    </body>
+</html>`;
 }
 
 async function captureMap(location, coords) {
@@ -125,24 +148,70 @@ async function captureMap(location, coords) {
   const mapBox = await mapElement.boundingBox();
   
   // Ensure the directory exists
-  const dir = path.join(__dirname, 'static', 'img');
+  const dir = path.join(__dirname, 'bucket-data');
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
 
+  const timestamp = Math.floor(Date.now() / 1000);
+  const browserImagePath = path.join(dir, `map-${location}-tmp.png`);
+  const finalImagePath = path.join(dir, `map-${location}-${timestamp}.png`);
+  const htmlPath = path.join(dir, `${location}.html`);
+
   await page.screenshot({
-    path: path.join(dir, `map-${location}-tmp.png`),
+    path: browserImagePath,
     clip: mapBox
   });
 
   await browser.close();
 
-  const text = `${location}, ${getTime()}`;
-  const finalImagePath = path.join(dir, `map-${location}.png`);
-  await overlayText(text, path.join(dir, `map-${location}-tmp.png`), finalImagePath);
+  // image pipline should be:
+  // 1. add text
+  // 2. contrast
+  // 3. dither
+  // 4. save
+
+  const svg = Buffer.from(`
+    <svg width="800" height="480" xmlns="http://www.w3.org/2000/svg">
+      <style>
+        text { font: 14px monospace; fill: white; }
+      </style>
+      <text x="0" y="10" dominant-baseline="top" text-anchor="left">
+        ${location}, ${getTime()}
+      </text>
+    </svg>
+  `);
+
+  const contrastFactor = 1.5;
+  const { data, info } = await sharp(browserImagePath)
+    // Add text
+    .composite([{ input: svg, top: 0, left: 0 }])
+    // Convert to grayscale and apply contrast
+    .grayscale()
+    .linear(contrastFactor, -(128 * (contrastFactor - 1))) // contrast adjustment
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+
+  // Apply dithering
+  const dithered = floydSteinbergDither(data, info.width, info.height);
+
+  await sharp(Buffer.from(dithered), {
+    raw: {
+      width: info.width,
+      height: info.height,
+      channels: 1
+    }
+  })
+    .png({ palette: true, colors: 2 }) // 2-color palette output
+    .toFile(finalImagePath)
   
   // Upload to Google Cloud Storage
-  await uploadToBucket(finalImagePath, `map-${location}.png`);
+  await uploadToBucket(finalImagePath, `map-${location}-${timestamp}.png`);
+  
+  // Generate and save HTML
+  const html = generateHTML(`map-${location}-${timestamp}.png`);
+  fs.writeFileSync(htmlPath, html);
+  await uploadToBucket(htmlPath, `${location}.html`);
 }
 
 async function main() {
