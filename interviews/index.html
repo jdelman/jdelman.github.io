@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Interviews</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 1em auto;
+      color: #161412;
+      font-family: 'Gill Sans MT', 'Gill Sans', sans-serif;
+      font-weight: lighter;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1024px;
+      margin: 0 auto;
+      padding: 4em 0 6em;
+    }
+
+    h1 {
+      margin: 0 0.4em 1.5em;
+      font-size: clamp(2.1rem, 7vw, 4.8rem);
+      font-weight: lighter;
+      line-height: 1;
+    }
+
+    h2, h3, h4, h5, h6 {
+      margin: 2.5em 0.4em 1em;
+      letter-spacing: 0.1em;
+      font-weight: lighter;
+      text-transform: uppercase;
+    }
+
+    .section {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.8em;
+      font-size: 1.2em;
+      margin: 0.4em;
+    }
+
+    .left {
+      color: #504a44;
+      margin: 0;
+      text-transform: uppercase;
+    }
+
+    .right {
+      text-align: left;
+    }
+
+    .right p {
+      position: relative;
+      margin: 0 0 1em;
+    }
+
+    .right a {
+      color: inherit;
+    }
+
+    .paragraph-actions {
+      display: inline-flex;
+      gap: 0.25em;
+      margin-left: 0.35em;
+      opacity: 0;
+      transform: translateY(0.08em);
+      transition: opacity 140ms ease;
+    }
+
+    .anchored-paragraph:hover .paragraph-actions,
+    .anchored-paragraph:focus-within .paragraph-actions {
+      opacity: 1;
+    }
+
+    .paragraph-action {
+      border: 0;
+      border-radius: 999px;
+      background: #f0ece4;
+      color: #161412;
+      cursor: pointer;
+      font: inherit;
+      line-height: 1;
+      padding: 0.18em 0.3em;
+      text-decoration: none;
+    }
+
+    .paragraph-action:hover,
+    .paragraph-action:focus-visible {
+      background: #ded6ca;
+      outline: none;
+    }
+
+    @media (min-width: 1024px) {
+      h1 {
+        margin-left: 8em;
+      }
+
+      h2, h3, h4, h5, h6 {
+        margin-left: 7.12em;
+      }
+
+      .section {
+        flex-direction: row;
+      }
+
+      .left {
+        flex-basis: 7.5em;
+        flex-shrink: 0;
+        margin: 0 1em 0 0;
+        text-align: right;
+      }
+
+      .right {
+        max-width: 680px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+      <h1>Interviews</h1>
+      
+      <div class="section">
+        <div class="left"></div>
+        <div class="right">
+          <p><a href="winogrand-afterimage-dec-1977.html">An Interview with Garry Winogrand</a></p>
+        </div>
+      </div>
+      
+      <div class="section">
+        <div class="left"></div>
+        <div class="right">
+          <p><a href="meyerowitz-cape-light.html">Meyerowitz Cape Light</a></p>
+        </div>
+      </div>
+  </main>
+  <script>
+    document.addEventListener("click", async (event) => {
+      const button = event.target.closest(".copy-paragraph");
+      if (!button) return;
+
+      const paragraph = document.getElementById(button.dataset.copyTarget);
+      if (!paragraph) return;
+
+      const copy = paragraph.cloneNode(true);
+      copy.querySelector(".paragraph-actions")?.remove();
+      const text = copy.textContent.trim();
+
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.style.position = "fixed";
+        textarea.style.left = "-9999px";
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        textarea.remove();
+      }
+    });
+  </script>
+</body>
+</html>
